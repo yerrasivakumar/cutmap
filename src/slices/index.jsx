@@ -9,6 +9,7 @@ const state ={
      adminEmail:'',
      adminEmployeeId:'',
      adminPhonenumber:'',
+     loading: false,
 //      accepted:'',
 //      message:''
  }
@@ -41,6 +42,9 @@ const userslice = createSlice(
         setAdminPhoneNumber:(state,{payload})=>{
          state.adminPhonenumber = payload
         },
+        setloading:(state,{payload})=>{
+       state.loading = payload
+        },
         // setAccepted:(state,{payload})=>{
         //     state.accepted = payload
         // },
@@ -58,5 +62,5 @@ const userslice = createSlice(
          }
 })
 
-export const { usertoken ,setuserid,setbranch,logout,setAdminToken,setAdminName,setAdminEmail,setAdminEmployeeId,setAdminPhoneNumber} = userslice.actions
+export const { usertoken ,setuserid,setbranch,logout,setAdminToken,setAdminName,setAdminEmail,setAdminEmployeeId,setAdminPhoneNumber,setloading} = userslice.actions
 export default userslice.reducer;

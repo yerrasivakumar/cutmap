@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom';
-import { Box, Button, FormControl, FormControlLabel, IconButton, InputLabel, OutlinedInput, Paper, Radio, RadioGroup, Typography } from '@mui/material';
+import { Backdrop, Box, Button, FormControl, FormControlLabel, IconButton, InputLabel, OutlinedInput, Paper, Radio, RadioGroup, Typography,  } from '@mui/material';
+import { makeStyles } from '@mui/styles';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff'
 import InputAdornment from '@mui/material/InputAdornment';
@@ -15,14 +16,26 @@ import {
 
 import "../App.css";
 
-
+import { useSelector  } from 'react-redux'
 import axios from 'axios';
 import LoginIcon from '@mui/icons-material/Login';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useDispatch } from 'react-redux'
-import { usertoken ,setuserid,setbranch,setAdminToken,setAdminEmail,setAdminEmployeeId,setAdminName,setAdminPhoneNumber } from '../slices';
+import { usertoken ,setuserid,setbranch,setAdminToken,setAdminEmail,setAdminEmployeeId,setAdminName,setAdminPhoneNumber,setloading } from '../slices';
+import Spinner from './Spinner';
+
+
+const useStyles = makeStyles(() => ({
+  backdrop: {
+    zIndex: 100,
+    color: '#fff',
+  },
+}));
 const Page2 = () => {
+  const user = useSelector((state)=>{
+    return state.user
+  })
   const navigate = useNavigate();
   // const handleChange = (e) => {
   //   const { name, value } = e.target;
@@ -81,39 +94,44 @@ const Page2 = () => {
         toast.error("Password minimum 5 Characters and maximum 10 Characters")
       }
       else{ 
-        axios({
-          method: "post",
-          url: `http://localhost:3000/auth/login`,
-          data:{
-            'email':email,
-            'password':password
-          }
-        })
-        .then((response) => {
-           console.log("ss",response?.data?.id);
-          // setPdata(response?.data?.id)
-          dispatch(usertoken(response?.data?.token))
-          dispatch(setuserid(response?.data?.id))
-          console.log('sadsad',response?.data?.token)
-          toast.success('Login successful');
+        dispatch(setloading(true))
+        setTimeout(() => {
           axios({
-            method: "get",
-            url: `http://localhost:3000/auth/AlluserDetails`
+            method: "post",
+            url: `http://localhost:3000/auth/login`,
+            data:{
+              'email':email,
+              'password':password
+            }
           })
-            .then((response) => {
-              dispatch(setbranch(response?.data?.users[0]?.branch)); 
+          .then((response) => {
+             console.log("ss",response?.data?.id);
+             dispatch(setloading(false))
+            // setPdata(response?.data?.id)
+            dispatch(usertoken(response?.data?.token))
+            dispatch(setuserid(response?.data?.id))
+            console.log('sadsad',response?.data?.token)
+            toast.success('Login successful');
+            axios({
+              method: "get",
+              url: `http://localhost:3000/auth/AlluserDetails`
             })
-            .catch((error) => {
-              console.log(error);
-            });
-          // sessionStorage.setItem('token1',response?.data?.token)
-          // sessionStorage.setItem('token2',response?.data?.id)
-            navigate("/")
-            window.reload()
-        })
-        .catch((error) => {
-        toast.error(error?.response?.data?.message);
-        });
+              .then((response) => {
+                dispatch(setbranch(response?.data?.users[0]?.branch)); 
+              })
+              .catch((error) => {
+                console.log(error);
+              });
+            // sessionStorage.setItem('token1',response?.data?.token)
+            // sessionStorage.setItem('token2',response?.data?.id)
+              navigate("/")
+              window.reload()
+          })
+          .catch((error) => {
+            dispatch(setloading(false))
+          toast.error(error?.response?.data?.message);
+          });
+        }, 1000);
         
       }
       //console.log('response',pdata);
@@ -133,12 +151,14 @@ setPassword('');
         toast.error("AdminPassword minimum 5 Characters and maximum 10 Characters")
       }
       else{ 
+        dispatch(setloading(true))
   try {
     const response = await axios.post('http://localhost:3000/user/adminLogin', {
       'email': adminemail, 
       'password':adminpassword });
       if (response.status === 200) {
         const data = response.data;
+        dispatch(setloading(false))
         dispatch(setAdminToken(data?.token))
         dispatch(setAdminName(data?.admin?.adminname))
         dispatch(setAdminEmployeeId(data?.admin?.employeeId))
@@ -154,6 +174,7 @@ setPassword('');
         // console.log("sivaa222",data?.admin?.phonenumber);
       } 
   } catch (error) {
+    dispatch(setloading(false))
    toast.error(error?.response?.data?.message)
   }
   setAdminemail('');
@@ -167,6 +188,17 @@ setPassword('');
 
   const handleMouseDownPassword = (event) => {
     event.preventDefault();
+  };
+ 
+  
+  const Loader = () => {
+    const classes = useStyles();
+  
+    return (
+      <Backdrop className={classes.backdrop} open={true}>
+        <Spinner/>
+      </Backdrop>
+    );
   };
 
   return (
@@ -366,6 +398,9 @@ setPassword('');
 
 
   </Paper>
+{
+  user.loading?<Loader/>:''
+}
   </Box>
   )
 }
